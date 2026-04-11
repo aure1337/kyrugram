@@ -11,13 +11,13 @@
         }
         body { margin: 0; font-family: 'Roboto', sans-serif; background: var(--m3-surface); height: 100vh; display: flex; flex-direction: column; }
         
-        /* Экраны */
         #auth-screen, #app-screen { display: none; flex: 1; flex-direction: column; }
         
-        /* Авторизация */
-        .auth-box { margin: auto; padding: 24px; background: white; border-radius: 28px; width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); display: flex; flex-direction: column; gap: 12px; }
-        .auth-box input { padding: 12px; border-radius: 12px; border: 1px solid #ccc; outline: none; }
-        .auth-box button { padding: 12px; border-radius: 20px; border: none; background: var(--m3-primary); color: white; cursor: pointer; font-weight: bold; }
+        /* Авторизация (добавили тег form для браузера) */
+        .auth-box { margin: auto; padding: 24px; background: white; border-radius: 28px; width: 300px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .auth-form { display: flex; flex-direction: column; gap: 12px; }
+        .auth-form input { padding: 12px; border-radius: 12px; border: 1px solid #ccc; outline: none; }
+        .auth-form button { padding: 12px; border-radius: 20px; border: none; background: var(--m3-primary); color: white; cursor: pointer; font-weight: bold; }
         
         /* Чат */
         header { padding: 16px; background: white; border-bottom: 1px solid #ddd; display: flex; justify-content: space-between; align-items: center;}
@@ -25,7 +25,7 @@
         .contact-input input { flex: 1; padding: 8px 12px; border-radius: 16px; border: 1px solid #ccc; outline: none; }
         
         #chat { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 8px; }
-        .msg { padding: 10px 16px; border-radius: 20px; max-width: 70%; line-height: 1.4; }
+        .msg { padding: 10px 16px; border-radius: 20px; max-width: 70%; line-height: 1.4; word-break: break-word; }
         .msg.me { align-self: flex-end; background: var(--m3-primary); color: white; border-bottom-right-radius: 4px; }
         .msg.other { align-self: flex-start; background: var(--m3-primary-light); color: #21005d; border-bottom-left-radius: 4px; }
         
@@ -38,11 +38,13 @@
 
 <div id="auth-screen">
     <div class="auth-box">
-        <h2 style="margin: 0; text-align: center;">Вход / Рега</h2>
-        <input type="email" id="email" placeholder="Email (любой)">
-        <input type="password" id="password" placeholder="Пароль (мин 6 симв)">
-        <button onclick="register()">Зарегистрироваться</button>
-        <button onclick="login()" style="background: #eaddff; color: #21005d;">Войти</button>
+        <h2 style="margin: 0 0 16px 0; text-align: center;">Вход / Рега</h2>
+        <form class="auth-form" onsubmit="return false;">
+            <input type="email" id="email" placeholder="Email (любой)">
+            <input type="password" id="password" placeholder="Пароль (мин 6 симв)" autocomplete="current-password">
+            <button onclick="register()">Зарегистрироваться</button>
+            <button onclick="login()" style="background: #eaddff; color: #21005d;">Войти</button>
+        </form>
     </div>
 </div>
 
@@ -53,7 +55,7 @@
     </header>
     
     <div class="contact-input">
-        <input type="email" id="contactEmail" placeholder="Email собеседника (кому пишем?)">
+        <input type="email" id="contactEmail" placeholder="Email собеседника">
         <button onclick="startChat()" style="padding: 8px 16px; border-radius: 16px; border: none; background: var(--m3-primary); color: white; cursor: pointer;">Открыть чат</button>
     </div>
 
@@ -68,8 +70,8 @@
 </div>
 
 <script>
-    // ВСТАВЬ СВОИ ДАННЫЕ
-    const supabase = supabase.createClient('https://vxmyecxwbmkzhdvstmkj.supabase.co', 'sb_publishable_ZK43win9MDcyJPlU5o6iZA_ODCQLmve');
+    // ИСПРАВЛЕНИЕ ЗДЕСЬ: Переименовали переменную в client
+    const client = supabase.createClient('https://vxmyecxwbmkzhdvstmkj.supabase.co', 'sb_publishable_ZK43win9MDcyJPlU5o6iZA_ODCQLmve');
     
     let currentUser = null;
     let currentContact = null;
@@ -77,7 +79,7 @@
 
     // --- АВТОРИЗАЦИЯ ---
     async function checkUser() {
-        const { data: { user } } = await supabase.auth.getUser();
+        const { data: { user } } = await client.auth.getUser(); // Используем client
         if (user) {
             currentUser = user.email;
             document.getElementById('auth-screen').style.display = 'none';
@@ -92,21 +94,21 @@
     async function register() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        const { error } = await supabase.auth.signUp({ email: e, password: p });
+        const { error } = await client.auth.signUp({ email: e, password: p }); // Используем client
         if (error) alert('Ошибка реги: ' + error.message);
-        else { alert('Успешно! Теперь нажми Войти'); }
+        else alert('Успешно! Теперь нажми Войти');
     }
 
     async function login() {
         const e = document.getElementById('email').value;
         const p = document.getElementById('password').value;
-        const { error } = await supabase.auth.signInWithPassword({ email: e, password: p });
+        const { error } = await client.auth.signInWithPassword({ email: e, password: p }); // Используем client
         if (error) alert('Ошибка входа: ' + error.message);
         else checkUser();
     }
 
     async function logout() {
-        await supabase.auth.signOut();
+        await client.auth.signOut(); // Используем client
         clearInterval(chatInterval);
         location.reload();
     }
@@ -116,9 +118,8 @@
         const contact = document.getElementById('contactEmail').value.trim();
         if (!contact || contact === currentUser) return alert('Введите валидный email другого человека');
         currentContact = contact;
-        document.getElementById('chat').innerHTML = ''; // Очищаем экран
+        document.getElementById('chat').innerHTML = ''; 
         
-        // Запускаем загрузку сообщений каждые 2 секунды
         if (chatInterval) clearInterval(chatInterval);
         loadMessages();
         chatInterval = setInterval(loadMessages, 2000);
@@ -127,8 +128,7 @@
     async function loadMessages() {
         if (!currentContact) return;
 
-        // Ищем переписку: где я отправитель, а он получатель ИЛИ наоборот
-        const { data, error } = await supabase
+        const { data, error } = await client // Используем client
             .from('private_messages')
             .select('*')
             .or(`and(sender.eq.${currentUser},receiver.eq.${currentContact}),and(sender.eq.${currentContact},receiver.eq.${currentUser})`)
@@ -151,7 +151,7 @@
         const text = document.getElementById('msgText').value;
         if (!text) return;
 
-        const { error } = await supabase
+        const { error } = await client // Используем client
             .from('private_messages')
             .insert([{ text: text, sender: currentUser, receiver: currentContact }]);
         
@@ -161,7 +161,6 @@
         }
     }
 
-    // Запуск при открытии сайта
     checkUser();
 </script>
 
