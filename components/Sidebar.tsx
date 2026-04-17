@@ -80,7 +80,7 @@ export default function Sidebar({
         .select('user_id')
         .eq('chat_id', chatId);
 
-      const otherUserId = participants?.find((p) => p.user_id !== session.user.id)?.user_id;
+      const otherUserId = participants?.find((p: any) => p.user_id !== session.user.id)?.user_id;
 
       if (!otherUserId) continue;
 
