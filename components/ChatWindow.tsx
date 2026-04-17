@@ -116,11 +116,11 @@ export default function ChatWindow({
     setLoading(true);
 
     try {
-      const { error } = await supabase.from('messages').insert({
+      const { error } = await supabase.from('messages').insert([{
         chat_id: chatId,
         sender_id: currentUser.id,
         content: newMessage.trim(),
-      });
+      }]);
 
       if (error) throw error;
 
