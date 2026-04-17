@@ -94,7 +94,7 @@ export default function ChatWindow({
       .select('user_id')
       .eq('chat_id', chatId);
 
-    const otherUserId = participants?.find((p) => p.user_id !== currentUser.id)?.user_id;
+    const otherUserId = participants?.find((p: any) => p.user_id !== currentUser.id)?.user_id;
 
     if (otherUserId) {
       const { data: user } = await supabase
