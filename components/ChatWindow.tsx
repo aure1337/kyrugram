@@ -89,7 +89,7 @@ export default function ChatWindow({
   const loadOtherUser = async () => {
     if (!chatId || !currentUser) return;
 
-    const { data: participants } = await supabase
+    const { data: participants }: { data: any } = await supabase
       .from('chat_participants')
       .select('user_id')
       .eq('chat_id', chatId);
